@@ -1,4 +1,30 @@
 import { Module } from '@nestjs/common';
+import { TaskModule } from './task/task.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-@Module({})
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+      // ignoreEnvFile: true
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (Config: ConfigService) => ({
+        type: 'mysql',
+        host: Config.get('DB_HOST'),
+        port: Config.get('DB_PORT'),
+        username: Config.get('DB_USER'),
+        // password: config.get('DB_PASSWORD'),
+        database: Config.get('DB_NAME'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true,
+      }),
+    }),
+    TaskModule,
+  ],
+})
 export class AppModule {}
